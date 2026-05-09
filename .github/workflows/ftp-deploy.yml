@@ -1,0 +1,35 @@
+name: Deploy via FTP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    name: FTP Deploy to server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # needed so FTP action can diff changed files
+
+      - name: Deploy changed files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server:        ${{ secrets.FTP_HOST }}
+          username:      ${{ secrets.FTP_USER }}
+          password:      ${{ secrets.FTP_PASS }}
+          port:          ${{ secrets.FTP_PORT }}   # default 21; use 22 for SFTP
+          protocol:      ftp                        # change to ftps or sftp if needed
+          server-dir:    ${{ secrets.FTP_REMOTE_DIR }}
+          local-dir:     ./public/                  # only deploy the public folder
+          git-ftp-args:  --insecure                 # remove if your server has a valid TLS cert
+          exclude:       |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.env
+            **/config/env.php
