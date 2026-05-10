@@ -29,9 +29,14 @@ jobs:
           user   = os.environ['FTP_USER']
           passwd = os.environ['FTP_PASS']
 
-          # Files and dirs to never upload
-          SKIP_DIRS  = {'.git', '.github', 'database'}
-          SKIP_FILES = {'config/env.php', '.gitignore', 'README.md'}
+          # What goes where:
+          # repo/public/*  -> web_root/          (publicly accessible)
+          # repo/src/*     -> web_root/../src/   (above web root)
+          # repo/config/*  -> web_root/../config/ (above web root, never public)
+          # repo/api/*     -> web_root/../api/   (above web root)
+          # everything else -> skip
+
+          SKIP_FILES = {'config/env.php'}
 
           try:
               ftp = ftplib.FTP()
@@ -45,61 +50,77 @@ jobs:
               for candidate in ['public_html', 'www', 'htdocs', 'web']:
                   try:
                       ftp.cwd(candidate)
-                      web_root = candidate
+                      web_root = '/' + candidate
                       ftp.cwd('/')
                       print(f"Web root detected: {web_root}")
                       break
                   except:
                       pass
 
+              # For this host the structure is:
+              # /public_html/cedargrove.om-biz.com/ = web root
+              # We need to find cedargrove.om-biz.com subfolder
+              try:
+                  ftp.cwd(web_root)
+                  dirs = []
+                  ftp.retrlines('NLST', dirs.append)
+                  if 'cedargrove.om-biz.com' in dirs:
+                      web_root = web_root + '/cedargrove.om-biz.com'
+                      print(f"Domain subfolder found: {web_root}")
+                  ftp.cwd('/')
+              except:
+                  pass
+
+              base_root = web_root  # e.g. /public_html/cedargrove.om-biz.com
+
               def ensure_dir(ftp, path):
-                  """Recursively create remote directories."""
-                  parts = [p for p in path.replace('\\', '/').split('/') if p]
+                  parts = [p for p in path.split('/') if p]
                   current = ''
                   for part in parts:
-                      current = current + '/' + part
-                      try:
-                          ftp.mkd(current)
-                          print(f"  created dir: {current}")
-                      except:
-                          pass  # already exists
+                      current += '/' + part
+                      try: ftp.mkd(current)
+                      except: pass
 
               def upload_file(ftp, local_path, remote_path):
                   with open(local_path, 'rb') as f:
                       ftp.storbinary(f'STOR {remote_path}', f)
                   print(f"  uploaded: {remote_path}")
 
-              def upload_dir(ftp, local_dir, remote_dir):
+              def upload_dir(ftp, local_dir, remote_dir, skip_files=set()):
                   ensure_dir(ftp, remote_dir)
                   for item in sorted(Path(local_dir).iterdir()):
-                      # Build relative path from repo root for skip checks
-                      try:
-                          rel = str(item.relative_to(Path('.')))
-                      except:
-                          rel = item.name
-
-                      # Skip hidden files/dirs and excluded dirs
                       if item.name.startswith('.'):
-                          print(f"  skipping hidden: {rel}")
                           continue
-                      if item.is_dir() and item.name in SKIP_DIRS:
-                          print(f"  skipping dir: {rel}")
+                      rel = str(item.relative_to(Path(local_dir).parent))
+                      if rel in skip_files:
+                          print(f"  skipping: {rel}")
                           continue
-                      if item.is_file() and rel in SKIP_FILES:
-                          print(f"  skipping file: {rel}")
-                          continue
-
                       remote_path = f"{remote_dir.rstrip('/')}/{item.name}"
-
                       if item.is_dir():
-                          upload_dir(ftp, str(item), remote_path)
+                          upload_dir(ftp, str(item), remote_path, skip_files)
                       else:
                           upload_file(ftp, str(item), remote_path)
 
-              print(f"\nStarting full deploy to {web_root}...")
-              upload_dir(ftp, '.', web_root)
+              # 1. Deploy public/* -> web root (what browsers see)
+              print(f"\n--- Uploading public/ -> {base_root}/ ---")
+              upload_dir(ftp, 'public', base_root)
+
+              # 2. Deploy src/ -> one level above web root
+              print(f"\n--- Uploading src/ -> {base_root}/../src/ ---")
+              upload_dir(ftp, 'src', base_root + '/../src')
+
+              # 3. Deploy config/ -> one level above web root (skip env.php)
+              print(f"\n--- Uploading config/ -> {base_root}/../config/ ---")
+              upload_dir(ftp, 'config', base_root + '/../config',
+                         skip_files={'config/env.php', 'env.php'})
+
+              # 4. Deploy api/ -> one level above web root
+              print(f"\n--- Uploading api/ -> {base_root}/../api/ ---")
+              upload_dir(ftp, 'api', base_root + '/../api')
+
               ftp.quit()
               print("\nDeploy complete!")
+              print(f"Site live at: http://cedargrove.om-biz.com/")
 
           except ftplib.all_errors as e:
               print(f"FTP ERROR: {e}", file=sys.stderr)
