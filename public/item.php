@@ -6,10 +6,9 @@ require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
 
 $item_id = $_GET['id'] ?? '';
-if (!$item_id) { header('Location: index.php'); exit; }
-
-$item      = fetch_item($item_id);
-if (!$item) { header('Location: index.php'); exit; }
+if (!$item_id) { header('Location: /index.php'); exit; }
+$item = fetch_item($item_id);
+if (!$item) { header('Location: /index.php'); exit; }
 
 $sizes     = fetch_item_sizes($item_id);
 $modifiers = fetch_item_modifiers($item_id);
@@ -17,16 +16,11 @@ $modifiers = fetch_item_modifiers($item_id);
 $steps = [];
 if (count($sizes) > 1) {
     $steps[] = [
-        'key'        => '__size__',
-        'label'      => 'Choose a size',
-        'ui_type'    => 'radio',
-        'min_select' => 1,
-        'max_select' => 1,
-        'options'    => array_map(fn($s) => [
-            'id'          => $s['id'],
-            'name'        => $s['label'],
-            'price_delta' => (float)$s['price'],
-            'is_size'     => true,
+        'key'     => '__size__', 'label' => 'Choose a size',
+        'ui_type' => 'radio', 'min_select' => 1, 'max_select' => 1,
+        'options' => array_map(fn($s) => [
+            'id' => $s['id'], 'name' => $s['label'],
+            'price_delta' => (float)$s['price'], 'is_size' => true,
         ], $sizes),
     ];
 }
@@ -48,9 +42,8 @@ foreach ($modifiers as $mg) {
 
 $base_price  = count($sizes) === 1 ? (float)$sizes[0]['price'] : 0;
 $single_size = count($sizes) === 1 ? $sizes[0]['label'] : null;
-$item_json   = json_encode(['id' => $item['id'], 'name' => $item['name'], 'base_price' => $base_price, 'single_size' => $single_size]);
+$item_json   = json_encode(['id'=>$item['id'],'name'=>$item['name'],'base_price'=>$base_price,'single_size'=>$single_size]);
 $steps_json  = json_encode($steps);
-
 $basket_count = array_sum(array_column($_SESSION['basket'] ?? [], 'qty'));
 ?>
 <!DOCTYPE html>
@@ -59,14 +52,14 @@ $basket_count = array_sum(array_column($_SESSION['basket'] ?? [], 'qty'));
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><?= esc($item['name']) ?> &mdash; Cedar Grove</title>
-  <link rel="stylesheet" href="assets/css/app.css" />
+  <link rel="stylesheet" href="/assets/css/app.css" />
 </head>
 <body>
 <header class="site-header">
   <div class="header-inner">
-    <a href="index.php" class="back-btn">&larr; Menu</a>
+    <a href="/index.php" class="back-btn">&larr; Menu</a>
     <div class="logo"><span class="logo-icon">CG</span><strong>Cedar Grove &amp; Gianni's</strong></div>
-    <a href="basket.php" class="basket-btn">
+    <a href="/basket.php" class="basket-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
@@ -95,6 +88,6 @@ $basket_count = array_sum(array_column($_SESSION['basket'] ?? [], 'qty'));
 const ITEM  = <?= $item_json ?>;
 const STEPS = <?= $steps_json ?>;
 </script>
-<script src="assets/js/chatbot.js"></script>
+<script src="/assets/js/chatbot.js"></script>
 </body>
 </html>

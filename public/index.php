@@ -1,11 +1,8 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', '1');
+ini_set('display_errors','1');
 session_start();
-
-// Everything lives in the same directory on this host
 $base = __DIR__;
-
 require_once $base . '/config/env.php';
 require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
@@ -20,10 +17,9 @@ $basket_count = array_sum(array_column($basket, 'qty'));
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cedar Grove &amp; Gianni's &mdash; Menu</title>
-  <link rel="stylesheet" href="assets/css/app.css" />
+  <link rel="stylesheet" href="/assets/css/app.css" />
 </head>
 <body>
-
 <header class="site-header">
   <div class="header-inner">
     <div class="logo">
@@ -33,7 +29,7 @@ $basket_count = array_sum(array_column($basket, 'qty'));
         <small>160 Stelton Rd, Piscataway NJ &middot; 732-752-6900</small>
       </div>
     </div>
-    <a href="basket.php" class="basket-btn">
+    <a href="/basket.php" class="basket-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
@@ -45,13 +41,10 @@ $basket_count = array_sum(array_column($basket, 'qty'));
     </a>
   </div>
 </header>
-
 <main class="container">
-
   <div class="tab-bar">
     <?php foreach ($restaurants as $i => $r): ?>
-      <button class="tab-btn <?= $i === 0 ? 'active' : '' ?>"
-              data-target="rest-<?= $i ?>">
+      <button class="tab-btn <?= $i === 0 ? 'active' : '' ?>" data-target="rest-<?= $i ?>">
         <?= esc($r['name']) ?>
       </button>
     <?php endforeach; ?>
@@ -60,15 +53,11 @@ $basket_count = array_sum(array_column($basket, 'qty'));
   <?php foreach ($restaurants as $i => $r): ?>
   <div class="rest-panel <?= $i === 0 ? 'active' : '' ?>" id="rest-<?= $i ?>">
     <div class="menu-layout">
-
       <nav class="cat-nav">
         <?php foreach ($r['categories'] as $j => $cat): ?>
-          <a class="cat-link" href="#cat-<?= $i ?>-<?= $j ?>">
-            <?= esc($cat['name']) ?>
-          </a>
+          <a class="cat-link" href="#cat-<?= $i ?>-<?= $j ?>"><?= esc($cat['name']) ?></a>
         <?php endforeach; ?>
       </nav>
-
       <div class="items-area">
         <?php foreach ($r['categories'] as $j => $cat): ?>
           <section class="cat-section" id="cat-<?= $i ?>-<?= $j ?>">
@@ -79,7 +68,7 @@ $basket_count = array_sum(array_column($basket, 'qty'));
             <div class="item-grid">
               <?php foreach ($cat['items'] as $item): ?>
               <a class="item-card <?= $item['featured'] ? 'featured' : '' ?>"
-                 href="item.php?id=<?= urlencode($item['id']) ?>">
+                 href="/item.php?id=<?= urlencode($item['id']) ?>">
                 <?php if ($item['featured']): ?>
                   <span class="featured-badge">Featured</span>
                 <?php endif; ?>
@@ -102,13 +91,10 @@ $basket_count = array_sum(array_column($basket, 'qty'));
           </section>
         <?php endforeach; ?>
       </div>
-
     </div>
   </div>
   <?php endforeach; ?>
-
 </main>
-
-<script src="assets/js/menu.js"></script>
+<script src="/assets/js/menu.js"></script>
 </body>
 </html>

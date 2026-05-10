@@ -6,7 +6,7 @@ require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
 
 $basket = $_SESSION['basket'] ?? [];
-if (empty($basket)) { header('Location: index.php'); exit; }
+if (empty($basket)) { header('Location: /index.php'); exit; }
 
 $order_placed = false; $order_id = null; $error = null;
 
@@ -67,11 +67,11 @@ $tax = $subtotal * 0.0663; $total = $subtotal + $tax;
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Checkout &mdash; Cedar Grove</title>
-  <link rel="stylesheet" href="assets/css/app.css"/>
+  <link rel="stylesheet" href="/assets/css/app.css"/>
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
-  <a href="basket.php" class="back-btn">&larr; Basket</a>
+  <a href="/basket.php" class="back-btn">&larr; Basket</a>
   <div class="logo"><span class="logo-icon">CG</span><strong>Checkout</strong></div>
   <span></span>
 </div></header>
@@ -82,10 +82,10 @@ $tax = $subtotal * 0.0663; $total = $subtotal + $tax;
     <h2>Order placed!</h2>
     <p>Your order has been received.</p>
     <?php if ($order_id): ?><p class="order-ref">Ref: <strong><?= esc(substr($order_id,0,8)) ?>&hellip;</strong></p><?php endif; ?>
-    <a href="index.php" class="btn-primary" style="margin-top:20px">Back to menu</a>
+    <a href="/index.php" class="btn-primary" style="margin-top:20px">Back to menu</a>
   </div>
   <?php elseif ($error): ?>
-    <p class="error-msg"><?= esc($error) ?></p><a href="checkout.php" class="btn-primary">Try again</a>
+    <p class="error-msg"><?= esc($error) ?></p><a href="/checkout.php" class="btn-primary">Try again</a>
   <?php else: ?>
   <div class="checkout-layout">
     <form method="POST" class="checkout-form">

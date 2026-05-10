@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($b['id'] === $bid) { $b['qty'] = max(1, ($b['qty'] ?? 1) + ($action === 'inc' ? 1 : -1)); break; }
         }
     }
-    header('Location: basket.php'); exit;
+    header('Location: /basket.php'); exit;
 }
 
 $basket   = $_SESSION['basket'] ?? [];
@@ -28,17 +28,17 @@ $total    = $subtotal + $tax;
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Basket &mdash; Cedar Grove</title>
-  <link rel="stylesheet" href="assets/css/app.css" />
+  <link rel="stylesheet" href="/assets/css/app.css" />
 </head>
 <body>
 <header class="site-header"><div class="header-inner">
-  <a href="index.php" class="back-btn">&larr; Menu</a>
+  <a href="/index.php" class="back-btn">&larr; Menu</a>
   <div class="logo"><span class="logo-icon">CG</span><strong>Your Basket</strong></div>
   <span></span>
 </div></header>
 <main class="container basket-page">
   <?php if (empty($basket)): ?>
-    <div class="basket-empty"><p>Your basket is empty.</p><a href="index.php" class="btn-primary">Browse the menu</a></div>
+    <div class="basket-empty"><p>Your basket is empty.</p><a href="/index.php" class="btn-primary">Browse the menu</a></div>
   <?php else: ?>
   <div class="basket-layout">
     <div class="basket-items">
@@ -70,8 +70,8 @@ $total    = $subtotal + $tax;
       <div class="summary-row"><span>Subtotal</span><span><?= fmt($subtotal) ?></span></div>
       <div class="summary-row"><span>Tax (6.63%)</span><span><?= fmt($tax) ?></span></div>
       <div class="summary-row summary-row--total"><span>Total</span><span><?= fmt($total) ?></span></div>
-      <a href="checkout.php" class="btn-primary" style="margin-top:16px;display:block;text-align:center">Proceed to checkout</a>
-      <a href="index.php" class="btn-secondary" style="margin-top:8px;display:block;text-align:center">+ Add more items</a>
+      <a href="/checkout.php" class="btn-primary" style="margin-top:16px;display:block;text-align:center">Proceed to checkout</a>
+      <a href="/index.php" class="btn-secondary" style="margin-top:8px;display:block;text-align:center">+ Add more items</a>
     </div>
   </div>
   <?php endif; ?>
