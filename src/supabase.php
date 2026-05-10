@@ -1,14 +1,23 @@
 <?php
 /**
- * Supabase REST API helper
- * All data fetching goes through here.
+ * src/supabase.php
+ * Supabase REST helpers — path-independent
  */
-require_once __DIR__ . '/../config/env.php';
+if (!defined('SUPABASE_URL')) {
+    // Try to load env if not already loaded
+    $envCandidates = [
+        __DIR__ . '/../config/env.php',
+        __DIR__ . '/config/env.php',
+        dirname(__DIR__) . '/config/env.php',
+    ];
+    foreach ($envCandidates as $p) {
+        if (file_exists($p)) { require_once $p; break; }
+    }
+}
 
 function sb_get(string $table, array $params = []): array {
     $url = SUPABASE_URL . '/rest/v1/' . $table;
     if ($params) $url .= '?' . http_build_query($params);
-
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,

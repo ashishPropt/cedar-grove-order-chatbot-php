@@ -3,71 +3,12 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 session_start();
 
-$base = dirname(__DIR__);
+// Everything lives in the same directory on this host
+$base = __DIR__;
 
-// Try every possible path for env.php
-$envLoaded = false;
-foreach ([
-    $base . '/config/env.php',
-    __DIR__  . '/config/env.php',
-    __DIR__  . '/../config/env.php',
-    '/home/' . get_current_user() . '/config/env.php',
-] as $envPath) {
-    if (file_exists($envPath)) {
-        require_once $envPath;
-        $envLoaded = true;
-        break;
-    }
-}
-
-if (!$envLoaded || !defined('SUPABASE_URL')) {
-    die('<b>ERROR:</b> config/env.php not found.<br>'
-      . 'Searched:<br><pre>'
-      . implode("\n", [
-            $base . '/config/env.php',
-            __DIR__  . '/config/env.php',
-            __DIR__  . '/../config/env.php',
-        ])
-      . '</pre>'
-      . '__DIR__ = ' . __DIR__ . '<br>'
-      . 'dirname(__DIR__) = ' . dirname(__DIR__)
-    );
-}
-
-// Test if src files exist
-foreach ([$base.'/src/supabase.php', $base.'/src/helpers.php'] as $f) {
-    if (!file_exists($f)) die('<b>ERROR:</b> Missing file: ' . $f
-        . '<br>__DIR__=' . __DIR__
-        . '<br>base=' . $base);
-}
-
+require_once $base . '/config/env.php';
 require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
-
-// Quick Supabase connectivity test
-$ping = sb_get('restaurants', ['select' => 'id,name', 'limit' => '1']);
-if (empty($ping)) {
-    // Show detailed curl error
-    $ch = curl_init(SUPABASE_URL . '/rest/v1/restaurants?select=name&limit=1');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_VERBOSE        => false,
-        CURLOPT_HTTPHEADER => [
-            'apikey: '        . SUPABASE_ANON_KEY,
-            'Authorization: Bearer ' . SUPABASE_ANON_KEY,
-        ],
-    ]);
-    $res  = curl_exec($ch);
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $err  = curl_error($ch);
-    curl_close($ch);
-    die('<b>ERROR:</b> Supabase returned no data.<br>'
-      . 'HTTP status: ' . $code . '<br>'
-      . 'cURL error: ' . ($err ?: 'none') . '<br>'
-      . 'Response: <pre>' . htmlspecialchars($res) . '</pre>'
-      . 'URL tried: ' . SUPABASE_URL . '/rest/v1/restaurants'
-    );
-}
 
 $restaurants  = fetch_menu();
 $basket       = $_SESSION['basket'] ?? [];

@@ -1,15 +1,9 @@
 <?php
-$base = dirname(__DIR__);
-foreach ([
-    $base . '/config/env.php',
-    __DIR__ . '/config/env.php',
-    __DIR__ . '/../config/env.php',
-] as $envPath) {
-    if (file_exists($envPath)) { require_once $envPath; break; }
-}
+session_start();
+$base = __DIR__;
+require_once $base . '/config/env.php';
 require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
-session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';

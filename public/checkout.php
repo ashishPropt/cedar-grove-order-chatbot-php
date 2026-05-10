@@ -1,15 +1,9 @@
 <?php
-$base = dirname(__DIR__);
-foreach ([
-    $base . '/config/env.php',
-    __DIR__ . '/config/env.php',
-    __DIR__ . '/../config/env.php',
-] as $envPath) {
-    if (file_exists($envPath)) { require_once $envPath; break; }
-}
+session_start();
+$base = __DIR__;
+require_once $base . '/config/env.php';
 require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
-session_start();
 
 $basket = $_SESSION['basket'] ?? [];
 if (empty($basket)) { header('Location: index.php'); exit; }
@@ -34,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$customer) { $rows = sb_post('customers', ['name'=>$name,'email'=>$email,'phone'=>$phone]); $customer = $rows[0] ?? null; }
     }
 
-    $first_rows = sb_get('menu_items', ['id' => 'eq.' . $basket[0]['item_id'], 'select' => 'restaurant_id']);
+    $first_rows    = sb_get('menu_items', ['id' => 'eq.' . $basket[0]['item_id'], 'select' => 'restaurant_id']);
     $restaurant_id = $first_rows[0]['restaurant_id'] ?? null;
 
     $order_payload = ['restaurant_id'=>$restaurant_id,'status'=>'pending','order_type'=>$order_type,'subtotal'=>$subtotal,'tax'=>$tax,'total'=>$total,'notes'=>$notes];

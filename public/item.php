@@ -1,14 +1,7 @@
 <?php
-$base = dirname(__DIR__);
-
-foreach ([
-    $base . '/config/env.php',
-    __DIR__  . '/config/env.php',
-    __DIR__  . '/../config/env.php',
-] as $envPath) {
-    if (file_exists($envPath)) { require_once $envPath; break; }
-}
-
+session_start();
+$base = __DIR__;
+require_once $base . '/config/env.php';
 require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
 
@@ -58,7 +51,6 @@ $single_size = count($sizes) === 1 ? $sizes[0]['label'] : null;
 $item_json   = json_encode(['id' => $item['id'], 'name' => $item['name'], 'base_price' => $base_price, 'single_size' => $single_size]);
 $steps_json  = json_encode($steps);
 
-session_start();
 $basket_count = array_sum(array_column($_SESSION['basket'] ?? [], 'qty'));
 ?>
 <!DOCTYPE html>
@@ -80,9 +72,7 @@ $basket_count = array_sum(array_column($_SESSION['basket'] ?? [], 'qty'));
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
       </svg>
       Basket
-      <?php if ($basket_count > 0): ?>
-        <span class="basket-badge"><?= $basket_count ?></span>
-      <?php endif; ?>
+      <?php if ($basket_count > 0): ?><span class="basket-badge"><?= $basket_count ?></span><?php endif; ?>
     </a>
   </div>
 </header>
