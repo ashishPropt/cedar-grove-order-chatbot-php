@@ -1,52 +1,77 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 session_start();
 
-// ---- bootstrap ----
 $base = dirname(__DIR__);
 
-// Try multiple possible locations for env.php
+// Try every possible path for env.php
+$envLoaded = false;
 foreach ([
     $base . '/config/env.php',
     __DIR__  . '/config/env.php',
     __DIR__  . '/../config/env.php',
+    '/home/' . get_current_user() . '/config/env.php',
 ] as $envPath) {
-    if (file_exists($envPath)) { require_once $envPath; break; }
+    if (file_exists($envPath)) {
+        require_once $envPath;
+        $envLoaded = true;
+        break;
+    }
 }
 
-// Show a clear error if credentials still missing
-if (!defined('SUPABASE_URL') || !defined('SUPABASE_ANON_KEY')) {
-    die(renderError(
-        'Configuration missing',
-        'config/env.php not found or missing constants.<br>'
-        . 'Create it on the server with SUPABASE_URL and SUPABASE_ANON_KEY defined.<br>'
-        . 'Expected path: <code>' . $base . '/config/env.php</code>'
-    ));
+if (!$envLoaded || !defined('SUPABASE_URL')) {
+    die('<b>ERROR:</b> config/env.php not found.<br>'
+      . 'Searched:<br><pre>'
+      . implode("\n", [
+            $base . '/config/env.php',
+            __DIR__  . '/config/env.php',
+            __DIR__  . '/../config/env.php',
+        ])
+      . '</pre>'
+      . '__DIR__ = ' . __DIR__ . '<br>'
+      . 'dirname(__DIR__) = ' . dirname(__DIR__)
+    );
+}
+
+// Test if src files exist
+foreach ([$base.'/src/supabase.php', $base.'/src/helpers.php'] as $f) {
+    if (!file_exists($f)) die('<b>ERROR:</b> Missing file: ' . $f
+        . '<br>__DIR__=' . __DIR__
+        . '<br>base=' . $base);
 }
 
 require_once $base . '/src/supabase.php';
 require_once $base . '/src/helpers.php';
 
-// ---- fetch data ----
-$restaurants = fetch_menu();
-$basket      = $_SESSION['basket'] ?? [];
+// Quick Supabase connectivity test
+$ping = sb_get('restaurants', ['select' => 'id,name', 'limit' => '1']);
+if (empty($ping)) {
+    // Show detailed curl error
+    $ch = curl_init(SUPABASE_URL . '/rest/v1/restaurants?select=name&limit=1');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_VERBOSE        => false,
+        CURLOPT_HTTPHEADER => [
+            'apikey: '        . SUPABASE_ANON_KEY,
+            'Authorization: Bearer ' . SUPABASE_ANON_KEY,
+        ],
+    ]);
+    $res  = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err  = curl_error($ch);
+    curl_close($ch);
+    die('<b>ERROR:</b> Supabase returned no data.<br>'
+      . 'HTTP status: ' . $code . '<br>'
+      . 'cURL error: ' . ($err ?: 'none') . '<br>'
+      . 'Response: <pre>' . htmlspecialchars($res) . '</pre>'
+      . 'URL tried: ' . SUPABASE_URL . '/rest/v1/restaurants'
+    );
+}
+
+$restaurants  = fetch_menu();
+$basket       = $_SESSION['basket'] ?? [];
 $basket_count = array_sum(array_column($basket, 'qty'));
-
-if (empty($restaurants)) {
-    // Try to give a useful debug message
-    $test = sb_get('restaurants', []);
-    $debug = defined('SUPABASE_URL')
-        ? 'Supabase URL: ' . SUPABASE_URL . '<br>Got ' . count($test) . ' restaurants. Check RLS policies and anon key.'
-        : 'SUPABASE_URL not defined.';
-    die(renderError('No restaurant data returned', $debug));
-}
-
-function renderError(string $title, string $msg): string {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>
-    <title>Error</title>
-    <style>body{font-family:sans-serif;padding:40px;background:#fff5f5}
-    h2{color:#c53030}code{background:#f0f0f0;padding:2px 6px;border-radius:4px}</style>
-    </head><body><h2>&#9888; $title</h2><p>$msg</p></body></html>";
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
