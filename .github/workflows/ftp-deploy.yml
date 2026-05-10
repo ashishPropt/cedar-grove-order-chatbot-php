@@ -29,25 +29,48 @@ jobs:
           user   = os.environ['FTP_USER']
           passwd = os.environ['FTP_PASS']
 
-          REMOTE_BASE = 'cedargrove.om-biz.com'
-          SKIP_DIRS   = {'.git', '.github', 'database'}
-          SKIP_FILES  = {'config/env.php'}
+          SKIP_DIRS  = {'.git', '.github', 'database'}
+          SKIP_FILES = {'config/env.php'}
 
           ftp = ftplib.FTP()
           ftp.connect(host, 21, timeout=60)
           ftp.login(user, passwd)
           ftp.set_pasv(True)
-          print('Logged in, PWD:', ftp.pwd())
+
+          # Find the actual web root by listing and detecting domain folder
+          root_items = []
+          ftp.retrlines('NLST', root_items.append)
+          print('Root items:', root_items)
+
+          # Try to find web root
+          REMOTE_BASE = None
+          for candidate in ['cedargrove.om-biz.com', 'public_html', 'www', 'htdocs']:
+              if candidate in root_items:
+                  REMOTE_BASE = candidate
+                  print('Found remote base:', REMOTE_BASE)
+                  break
+
+          if not REMOTE_BASE:
+              # Just use root
+              REMOTE_BASE = ''
+              print('Using FTP root as base')
 
           def ensure_dir(ftp, path):
-              parts = [p for p in path.split('/') if p]
+              parts = [p for p in path.replace('\\','/').split('/') if p]
               cur = ''
               for p in parts:
                   cur += '/' + p
-                  try: ftp.mkd(cur)
-                  except: pass
+                  try:
+                      ftp.mkd(cur)
+                      print('  mkdir:', cur)
+                  except:
+                      pass  # already exists
 
           def upload_file(ftp, local, remote):
+              # Ensure parent dir exists
+              parent = '/'.join(remote.split('/')[:-1])
+              if parent:
+                  ensure_dir(ftp, parent)
               with open(local, 'rb') as f:
                   ftp.storbinary('STOR ' + remote, f)
               print('  uploaded:', remote)
@@ -65,11 +88,13 @@ jobs:
                   else:
                       upload_file(ftp, str(item), rpath)
 
-          # Upload public/* directly to web root
-          print('\n--- Uploading public/ contents to', REMOTE_BASE, '---')
+          base = (REMOTE_BASE + '/') if REMOTE_BASE else ''
+
+          # Upload public/* to web root
+          print('\n--- Uploading public/ to', base, '---')
           for item in sorted(Path('public').iterdir()):
               if item.name.startswith('.'): continue
-              rpath = REMOTE_BASE + '/' + item.name
+              rpath = base + item.name
               if item.is_dir():
                   upload_dir(ftp, str(item), rpath)
               else:
@@ -77,15 +102,16 @@ jobs:
 
           # Upload src/
           print('\n--- Uploading src/ ---')
-          upload_dir(ftp, 'src', REMOTE_BASE + '/src')
+          upload_dir(ftp, 'src', base + 'src')
 
           # Upload config/ (skip env.php)
           print('\n--- Uploading config/ ---')
+          ensure_dir(ftp, base + 'config')
           for item in sorted(Path('config').iterdir()):
               if item.name == 'env.php':
-                  print('  skipping config/env.php')
+                  print('  skipping env.php')
                   continue
-              upload_file(ftp, str(item), REMOTE_BASE + '/config/' + item.name)
+              upload_file(ftp, str(item), base + 'config/' + item.name)
 
           ftp.quit()
           print('\nDeploy complete!')
