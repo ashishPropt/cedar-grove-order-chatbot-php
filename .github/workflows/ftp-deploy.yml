@@ -17,36 +17,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: List files being deployed
-        run: |
-          echo "=== Files to deploy ==="
-          find . -not -path './.git/*' -not -path './.github/*' -not -name '.gitignore' -type f | sort
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
 
-      - name: Test FTP connection
+      - name: Deploy via lftp
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          FTP_DIR:  ${{ secrets.FTP_REMOTE_DIR }}
         run: |
-          sudo apt-get install -y lftp
-          lftp -u "${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }}" \
-               -e "set ftp:ssl-allow no; ls; bye" \
-               ftp://${{ secrets.FTP_HOST }} || echo "FTP connection test failed"
-
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server:      ${{ secrets.FTP_HOST }}
-          username:    ${{ secrets.FTP_USER }}
-          password:    ${{ secrets.FTP_PASS }}
-          port:        21
-          protocol:    ftp
-          server-dir:  ${{ secrets.FTP_REMOTE_DIR }}
-          local-dir:   ./
-          dangerous-clean-slate: false
-          git-ftp-args: --insecure
-          log-level:   verbose
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github/**
-            **/node_modules/**
-            **/config/env.php
-            **/database/**
-            **/README.md
+          lftp -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST <<EOF
+          set ftp:ssl-allow no
+          set net:timeout 10
+          set net:max-retries 3
+          mirror --reverse \
+                 --delete \
+                 --verbose \
+                 --exclude-glob .git \
+                 --exclude-glob .github \
+                 --exclude-glob database \
+                 --exclude-glob "config/env.php" \
+                 . $FTP_DIR
+          bye
+          EOF
