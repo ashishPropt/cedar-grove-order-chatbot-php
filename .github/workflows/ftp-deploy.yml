@@ -20,21 +20,14 @@ jobs:
           FTP_HOST: cedargrove.om-biz.com
           FTP_USER: cedargrove@cedargrove.om-biz.com
           FTP_PASS: ${{ secrets.FTP_PASS }}
-          FTP_DIR:  ${{ secrets.FTP_REMOTE_DIR }}
         run: |
           python3 << 'PYEOF'
           import ftplib, os, sys
           from pathlib import Path
 
-          host    = os.environ['FTP_HOST']
-          user    = os.environ['FTP_USER']
-          passwd  = os.environ['FTP_PASS']
-          ftp_dir = os.environ.get('FTP_DIR', '/').strip() or '/'
-
-          print(f"Connecting to {host}...")
-          print(f"User: {user}")
-          print(f"Pass length: {len(passwd)} chars")
-          print(f"Remote dir: {ftp_dir}")
+          host   = os.environ['FTP_HOST']
+          user   = os.environ['FTP_USER']
+          passwd = os.environ['FTP_PASS']
 
           SKIP       = {'.git', '.github', 'database'}
           SKIP_FILES = {'config/env.php'}
@@ -42,16 +35,33 @@ jobs:
           try:
               ftp = ftplib.FTP()
               ftp.connect(host, 21, timeout=30)
-              print("Connected:", ftp.getwelcome())
               ftp.login(user, passwd)
-              print("Logged in OK")
               ftp.set_pasv(True)
+              print("Logged in OK")
 
-              def ensure_dir(ftp, path):
+              # List root to find the correct web root
+              print("\n=== Root directory listing ===")
+              ftp.retrlines('LIST')
+
+              # Try common web root names
+              web_root = '/'
+              for candidate in ['public_html', 'www', 'htdocs', 'web', 'public']:
                   try:
-                      ftp.mkd(path)
+                      ftp.cwd(candidate)
+                      web_root = candidate
+                      print(f"\nFound web root: {candidate}")
+                      print(f"=== {candidate}/ listing ===")
+                      ftp.retrlines('LIST')
+                      ftp.cwd('/')
+                      break
                   except:
                       pass
+
+              print(f"\n=== Deploying to: {web_root} ===")
+
+              def ensure_dir(ftp, path):
+                  try: ftp.mkd(path)
+                  except: pass
 
               def upload_file(ftp, local_path, remote_path):
                   with open(local_path, 'rb') as f:
@@ -74,7 +84,7 @@ jobs:
                       else:
                           upload_file(ftp, str(item), remote_path)
 
-              upload_dir(ftp, '.', ftp_dir.rstrip('/') or '/')
+              upload_dir(ftp, '.', web_root)
               ftp.quit()
               print("\nDeploy complete!")
 
