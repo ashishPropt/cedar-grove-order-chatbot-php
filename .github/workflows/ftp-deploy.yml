@@ -14,60 +14,78 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Verify secrets are set
+        run: |
+          echo "FTP_HOST is set: ${{ secrets.FTP_HOST != '' }}"
+          echo "FTP_USER is set: ${{ secrets.FTP_USER != '' }}"
+          echo "FTP_PASS is set: ${{ secrets.FTP_PASS != '' }}"
+          echo "FTP_REMOTE_DIR is set: ${{ secrets.FTP_REMOTE_DIR != '' }}"
+          echo "FTP_REMOTE_DIR value: ${{ secrets.FTP_REMOTE_DIR }}"
+
+      - name: Deploy via Python FTP
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
           FTP_PASS: ${{ secrets.FTP_PASS }}
           FTP_DIR:  ${{ secrets.FTP_REMOTE_DIR }}
         run: |
-          echo "FTP_HOST is set: $( [ -n "$FTP_HOST" ] && echo YES || echo NO )"
-          echo "FTP_USER is set: $( [ -n "$FTP_USER" ] && echo YES || echo NO )"
-          echo "FTP_PASS is set: $( [ -n "$FTP_PASS" ] && echo YES || echo NO )"
-          echo "FTP_DIR  is set: $( [ -n "$FTP_DIR"  ] && echo YES || echo NO )"
-          echo "FTP_HOST length: ${#FTP_HOST}"
-          echo "FTP_USER length: ${#FTP_USER}"
-          echo "FTP_PASS length: ${#FTP_PASS}"
-          echo "FTP_DIR  value : $FTP_DIR"
+          python3 << 'PYEOF'
+          import ftplib, os, sys
+          from pathlib import Path
 
-      - name: Install lftp
-        run: sudo apt-get install -y lftp
+          host    = os.environ['FTP_HOST']
+          user    = os.environ['FTP_USER']
+          passwd  = os.environ['FTP_PASS']
+          ftp_dir = os.environ.get('FTP_DIR', '/').strip() or '/'
 
-      - name: Test FTP connection
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
-        run: |
-          lftp -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST <<'EOF'
-          set ftp:ssl-allow no
-          set net:timeout 15
-          ls
-          bye
-          EOF
+          print(f"Connecting to {host}...")
+          print(f"User: {user[:4]}*** ({len(user)} chars)")
+          print(f"Pass: {'set' if passwd else 'EMPTY'} ({len(passwd)} chars)")
+          print(f"Remote dir: {ftp_dir}")
 
-      - name: Deploy via lftp mirror
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
-          FTP_DIR:  ${{ secrets.FTP_REMOTE_DIR }}
-        run: |
-          lftp -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST <<EOF
-          set ftp:ssl-allow no
-          set net:timeout 30
-          set net:max-retries 3
-          set mirror:use-pget-n 5
-          mirror --reverse \
-                 --delete \
-                 --verbose \
-                 --exclude-glob .git/ \
-                 --exclude-glob .github/ \
-                 --exclude-glob database/ \
-                 --exclude-glob config/env.php \
-                 . $FTP_DIR
-          bye
-          EOF
+          # Files/dirs to skip
+          SKIP = {'.git', '.github', 'database', 'config'}
+          SKIP_FILES = {'config/env.php'}
+
+          try:
+              ftp = ftplib.FTP()
+              ftp.connect(host, 21, timeout=30)
+              print("Connected:", ftp.getwelcome())
+              ftp.login(user, passwd)
+              print("Logged in OK")
+
+              def ensure_dir(ftp, path):
+                  try: ftp.mkd(path)
+                  except: pass
+
+              def upload_file(ftp, local_path, remote_path):
+                  with open(local_path, 'rb') as f:
+                      ftp.storbinary(f'STOR {remote_path}', f)
+                  print(f"  uploaded: {remote_path}")
+
+              def upload_dir(ftp, local_dir, remote_dir):
+                  ensure_dir(ftp, remote_dir)
+                  for item in sorted(Path(local_dir).iterdir()):
+                      rel = item.relative_to('.')
+                      # skip hidden + excluded dirs
+                      if item.name.startswith('.') or item.name in SKIP:
+                          print(f"  skipping: {rel}")
+                          continue
+                      if str(rel) in SKIP_FILES:
+                          print(f"  skipping file: {rel}")
+                          continue
+                      remote_path = f"{remote_dir}/{item.name}"
+                      if item.is_dir():
+                          upload_dir(ftp, item, remote_path)
+                      else:
+                          upload_file(ftp, item, remote_path)
+
+              upload_dir(ftp, '.', ftp_dir.rstrip('/'))
+              ftp.quit()
+              print("\nDeploy complete!")
+
+          except ftplib.all_errors as e:
+              print(f"FTP ERROR: {e}", file=sys.stderr)
+              sys.exit(1)
+          PYEOF
