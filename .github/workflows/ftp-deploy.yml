@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:   # allows manual trigger from GitHub Actions tab
 
 jobs:
   ftp-deploy:
@@ -14,18 +15,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0   # full history so diff works on subsequent deploys
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server:      ${{ secrets.FTP_HOST }}
-          username:    ${{ secrets.FTP_USER }}
-          password:    ${{ secrets.FTP_PASS }}
-          port:        21
-          protocol:    ftp
-          server-dir:  ${{ secrets.FTP_REMOTE_DIR }}
-          local-dir:   ./
+          server:       ${{ secrets.FTP_HOST }}
+          username:     ${{ secrets.FTP_USER }}
+          password:     ${{ secrets.FTP_PASS }}
+          port:         21
+          protocol:     ftp
+          server-dir:   ${{ secrets.FTP_REMOTE_DIR }}
+          local-dir:    ./
+          dangerous-clean-slate: false
           git-ftp-args: --insecure
           exclude: |
             **/.git*

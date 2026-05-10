@@ -1,94 +1,39 @@
-# Cedar Grove Order Chatbot — PHP Version (POC)
+# Cedar Grove Cafe & Gianni's Pizzarama
 
-PHP + vanilla JS chatbot for ordering from **Cedar Grove Cafe** and **Gianni's Pizzarama**.
+Full-stack PHP ordering app — menu browser, item chatbot, basket & checkout.
 
-## Architecture
+## Stack
+PHP 8+ · Vanilla JS · Supabase (PostgreSQL) · No frameworks · No npm
 
+## Structure
 ```
-┌─────────────────────────┐        POST /api/chat.php
-│  public/index.html      │  ◄──►  { action, ...params }
-│  public/assets/js/      │        returns JSON
-│    chatbot.js           │
-│  public/assets/css/     │
-│    chatbot.css          │
-└─────────────────────────┘
-         ↕
-┌─────────────────────────┐
-│  api/chat.php           │  Stateless JSON API
-│  src/menu_data.php      │  All menu data + price helpers
-└─────────────────────────┘
-```
-
-**State lives in the browser** — the PHP API is fully stateless. Each step is a single `POST` with an `action` key. Cart is persisted in `sessionStorage`.
-
-## API actions
-
-| action | params | returns |
-|--------|--------|---------|
-| `get_restaurants` | — | `{ restaurants: [] }` |
-| `get_categories` | `restaurant` | `{ categories: [] }` |
-| `get_items` | `category` | `{ items: [] }` |
-| `get_sizes` | `category, item` | `{ sizes: [], price_map: {} }` |
-| `get_modifiers` | `category` | `{ modifiers: {} }` |
-| `price_item` | `category, item, size_key, selections` | `{ name, base_price, mod_total, mod_lines, line_total }` |
-
-## File structure
-
-```
-api/
-  chat.php               ← Stateless JSON API (6 actions)
+public/          <- web root (deploy this to server)
+  index.php      <- menu browser
+  item.php       <- item chatbot
+  add_to_basket.php
+  basket.php
+  checkout.php
+  assets/css/app.css
+  assets/js/menu.js
+  assets/js/chatbot.js
 src/
-  menu_data.php          ← Full menu: 250+ items, all modifiers & prices
-public/
-  index.html             ← Single-page shell
-  assets/
-    css/chatbot.css      ← All styles
-    js/chatbot.js        ← State machine + API calls (vanilla JS)
+  supabase.php   <- Supabase curl helpers
+  helpers.php    <- menu fetch functions
+config/
+  env.php        <- NEVER committed (add manually on server)
+  env.example.php
+api/
+  chat.php       <- legacy chatbot API
+database/
+  schema_and_seed.sql
 ```
 
-## Local setup
+## Setup
+1. Copy `config/env.example.php` to `config/env.php` and fill in Supabase credentials
+2. Run `database/schema_and_seed.sql` in Supabase SQL editor
+3. Point web server document root to `public/`
+4. `php -S localhost:8000 -t public/` for local dev
 
-Requires PHP 8.0+ and a web server. Quickest way:
-
-```bash
-cd public
-php -S localhost:8000
-```
-
-Open `http://localhost:8000` — the JS calls `../api/chat.php` which resolves correctly from the `public/` document root via the server routing below.
-
-### Apache / Nginx
-
-Point document root to `public/`. Add a rewrite so `/api/chat.php` resolves to `../api/chat.php`:
-
-**Apache** (`.htaccess` in `public/`):
-```apache
-RewriteEngine On
-RewriteRule ^api/(.*)$ ../api/$1 [L]
-```
-
-**Nginx**:
-```nginx
-root /var/www/cedar-grove/public;
-location /api/ {
-    alias /var/www/cedar-grove/api/;
-    try_files $uri =404;
-    fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-    include fastcgi_params;
-    fastcgi_param SCRIPT_FILENAME $request_filename;
-}
-```
-
-## Supabase / DB integration (next step)
-
-Add a `save_order` action to `api/chat.php` that POSTs to Supabase REST:
-```php
-case 'save_order':
-    $url = getenv('SUPABASE_URL') . '/rest/v1/orders';
-    $key = getenv('SUPABASE_ANON_KEY');
-    // ... curl POST
-```
-
-## Tech
-
-PHP 8+ · Vanilla JS (no framework) · Plain CSS · Zero npm dependencies
+## Deploy
+Push to `main` — GitHub Actions FTP workflow deploys automatically.
+`config/env.php` is excluded from deploy — set it manually on the server.
