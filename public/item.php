@@ -39,8 +39,7 @@ $host = ((!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http').
 <style>
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f4;color:#1a1a1a}a{text-decoration:none;color:inherit}
 .hdr{background:#fff;border-bottom:1px solid #e5e5e5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.bk{font-size:14px;color:#1D9E75;font-weight:500}
-.logo{display:flex;align-items:center;gap:10px}
+.bk{font-size:14px;color:#1D9E75;font-weight:500}.logo{display:flex;align-items:center;gap:10px}
 .av{width:36px;height:36px;background:#1D9E75;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0}
 .logo strong{font-size:15px}
 .bkt{display:flex;align-items:center;gap:6px;background:#1D9E75;color:#fff;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;position:relative}
@@ -48,41 +47,30 @@ $host = ((!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http').
 .bdg{position:absolute;top:-4px;right:-4px;background:#e53e3e;color:#fff;width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .wrap{max-width:600px;margin:0 auto;padding:20px}
 .cw{background:#fff;border-radius:16px;border:1px solid #e5e5e5;box-shadow:0 2px 20px rgba(0,0,0,.08);overflow:hidden}
-
-/* Start screen */
-.start-screen{padding:40px 30px;text-align:center}
-.start-icon{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;font-size:32px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-.start-screen h2{font-size:20px;color:#111;margin-bottom:8px}
-.start-screen p{font-size:14px;color:#666;margin-bottom:24px;line-height:1.6}
-.start-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.btn-voice{padding:12px 24px;border-radius:24px;border:none;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .15s,box-shadow .15s}
-.btn-voice:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(29,158,117,.4)}
-.btn-tap{padding:12px 24px;border-radius:24px;border:1px solid #ddd;background:#fff;color:#555;font-size:15px;font-weight:500;cursor:pointer;transition:background .15s}
-.btn-tap:hover{background:#f5f5f5}
-
-/* Chat UI */
-.chat-ui{display:none}
+.start{padding:40px 30px;text-align:center}
+.sicon{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;font-size:36px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.start h2{font-size:20px;margin-bottom:8px}
+.start p{font-size:14px;color:#666;margin-bottom:24px;line-height:1.7}
+.sbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.bv{padding:13px 26px;border-radius:24px;border:none;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px}
+.bt{padding:13px 26px;border-radius:24px;border:1px solid #ddd;background:#fff;color:#555;font-size:15px;cursor:pointer}
+.ui{display:none}
 .ch{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #eee;background:linear-gradient(135deg,#1D9E75,#0F6E56)}
-.ca{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,255,255,.3)}
-.ch-info strong{font-size:15px;color:#fff;display:block}
-.ch-info small{font-size:12px;color:rgba(255,255,255,.8)}
-
-/* Voice bar */
-.vbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#f0fdf8;border-bottom:1px solid #d1fae5}
-.mic{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:all .2s}
+.ca{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.3)}
+.ch-info strong{font-size:15px;color:#fff;display:block}.ch-info small{font-size:12px;color:rgba(255,255,255,.8)}
+/* mic panel */
+.mpanel{padding:12px 16px;background:#f0fdf8;border-bottom:1px solid #d1fae5;display:none}
+.mrow{display:flex;align-items:center;gap:10px}
+.mic{width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:20px}
 .mic.idle{background:#e5e5e5;color:#555}
 .mic.listening{background:#e53e3e;color:#fff;animation:pulse 1s infinite}
 .mic.speaking{background:#1D9E75;color:#fff}
-@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(229,62,62,.4)}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(229,62,62,0)}}
-.vstatus{font-size:12px;color:#065f46;flex:1;min-width:0}
-.vstatus strong{color:#065f46}
-.waves{display:none;align-items:center;gap:2px;height:16px;flex-shrink:0}
-.waves.show{display:flex}
-.waves span{width:3px;background:#1D9E75;border-radius:3px;animation:wave 1s ease-in-out infinite}
-.waves span:nth-child(2){animation-delay:.1s}.waves span:nth-child(3){animation-delay:.2s}.waves span:nth-child(4){animation-delay:.3s}.waves span:nth-child(5){animation-delay:.4s}
-@keyframes wave{0%,100%{height:3px}50%{height:14px}}
-
-/* Feed */
+@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(229,62,62,.4)}50%{transform:scale(1.08);box-shadow:0 0 0 10px rgba(229,62,62,0)}}
+.minfo{flex:1}
+.mstatus{font-size:13px;color:#065f46;font-weight:500}
+.mtranscript{font-size:12px;color:#888;margin-top:2px;min-height:16px;font-style:italic}
+.mhint{font-size:11px;color:#999;margin-top:6px}
+/* feed */
 .cf{padding:14px;display:flex;flex-direction:column;gap:8px;min-height:260px;max-height:360px;overflow-y:auto}
 .msg{display:flex;gap:8px;align-items:flex-end}
 .bot{flex-direction:row}.usr{flex-direction:row-reverse}
@@ -90,8 +78,6 @@ $host = ((!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http').
 .bb{max-width:78%;padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.5}
 .bot .bb{background:#f0f0f0;color:#111;border-radius:3px 14px 14px 14px}
 .usr .bb{background:#1D9E75;color:#fff;border-radius:14px 3px 14px 14px}
-
-/* Chips */
 .ca2{padding:0 14px 12px;display:flex;flex-direction:column;gap:6px}
 .hint{font-size:11px;color:#888}
 .crow{display:flex;flex-wrap:wrap;gap:7px}
@@ -99,10 +85,8 @@ $host = ((!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http').
 .chip:hover:not(:disabled){background:#f0faf6;border-color:#1D9E75;color:#1D9E75}
 .chip.sel{background:#e1f5ee;border-color:#1D9E75;color:#085041}
 .chip:disabled{opacity:.5;cursor:default}
-.conf{padding:8px 18px;border-radius:20px;border:none;background:#1D9E75;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.conf{padding:8px 18px;border-radius:20px;border:none;background:#1D9E75;color:#fff;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px}
 .conf:disabled{opacity:.5;cursor:default}
-
-/* Receipt */
 .rc{margin:8px 14px 14px;background:#f8f8f8;border:1px solid #e5e5e5;border-radius:12px;padding:14px}
 .rt{font-weight:600;font-size:14px;margin-bottom:8px}
 .rr{display:flex;justify-content:space-between;gap:12px;color:#555;margin-top:4px;font-size:13px}
@@ -110,10 +94,10 @@ $host = ((!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http').
 .rm{color:#777;font-size:12px;padding-left:10px;margin-top:2px}
 .ab{margin-top:10px;padding:12px;border-radius:12px;border:none;background:#1D9E75;color:#fff;font-size:14px;font-weight:600;cursor:pointer;width:100%}
 .ab:hover{background:#0F6E56}
-.nav-row{display:flex;gap:8px;margin-top:8px}
-.nc{padding:9px 14px;border-radius:20px;font-size:13px;font-weight:500;text-align:center;flex:1;text-decoration:none}
-.nc-s{border:1px solid #ddd;color:#444;background:#fff}
-.nc-p{background:#1D9E75;color:#fff}
+.navr{display:flex;gap:8px;margin-top:8px}
+.nc{padding:9px 14px;border-radius:20px;font-size:13px;font-weight:500;text-align:center;flex:1;text-decoration:none;border:none}
+.ncs{border:1px solid #ddd!important;color:#444;background:#fff}
+.ncp{background:#1D9E75;color:#fff}
 </style>
 </head>
 <body>
@@ -127,53 +111,54 @@ $host = ((!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http').
 </header>
 
 <div class="wrap">
-  <div class="cw">
+ <div class="cw">
 
-    <!-- START SCREEN -->
-    <div class="start-screen" id="startScreen">
-      <div class="start-icon">&#127908;</div>
-      <h2><?=htmlspecialchars($item['name'])?></h2>
-      <p>How would you like to order?<br>
-         <strong>Voice</strong> &mdash; I'll read the questions and listen to your answers.<br>
-         <strong>Tap</strong> &mdash; just tap the options on screen.</p>
-      <div class="start-btns">
-        <button class="btn-voice" id="btnVoice">
-          &#127908; Start voice order
-        </button>
-        <button class="btn-tap" id="btnTap">
-          &#128393; Tap to order
-        </button>
+  <!-- START SCREEN -->
+  <div class="start" id="SS">
+    <div class="sicon">&#127908;</div>
+    <h2><?=htmlspecialchars($item['name'])?></h2>
+    <p>Choose how you want to order:<br>
+      <strong>&#127908; Voice</strong> &mdash; I speak the questions, you answer out loud.<br>
+      <strong>&#9998; Tap</strong> &mdash; tap the options on screen.</p>
+    <div class="sbtns">
+      <button class="bv" id="bVoice">&#127908;&nbsp; Voice order</button>
+      <button class="bt"  id="bTap">&#9998;&nbsp; Tap to order</button>
+    </div>
+  </div>
+
+  <!-- CHAT UI -->
+  <div class="ui" id="UI">
+    <div class="ch">
+      <div class="ca">CG</div>
+      <div class="ch-info">
+        <strong><?=htmlspecialchars($item['name'])?></strong>
+        <small id="modeTag">Order assistant</small>
       </div>
     </div>
 
-    <!-- CHAT UI (hidden until mode chosen) -->
-    <div class="chat-ui" id="chatUI">
-      <div class="ch">
-        <div class="ca">CG</div>
-        <div class="ch-info">
-          <strong><?=htmlspecialchars($item['name'])?></strong>
-          <small id="modeLabel">Order assistant</small>
-        </div>
-      </div>
-
-      <!-- Voice bar (only shown in voice mode) -->
-      <div class="vbar" id="vbar" style="display:none">
-        <button class="mic idle" id="micBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+    <!-- Mic panel -->
+    <div class="mpanel" id="MP">
+      <div class="mrow">
+        <button class="mic idle" id="MB" title="Click to speak">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
             <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
           </svg>
         </button>
-        <div class="vstatus" id="vstatus">Listening for your answer&hellip;</div>
-        <div class="waves" id="waves"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="minfo">
+          <div class="mstatus" id="MS">Ready</div>
+          <div class="mtranscript" id="MT"></div>
+        </div>
       </div>
-
-      <div class="cf" id="F"></div>
-      <div id="A"></div>
+      <div class="mhint" id="MH">Tap mic and say your answer, or tap an option below</div>
     </div>
 
+    <div class="cf" id="F"></div>
+    <div id="A"></div>
   </div>
+
+ </div>
 </div>
 
 <script>
@@ -181,114 +166,156 @@ var ITEM  = <?=json_encode(['id'=>$item['id'],'name'=>$item['name'],'base_price'
 var STEPS = <?=json_encode($steps)?>;
 var HOST  = <?=json_encode($host)?>;
 
-var stepIdx=0, sizeLabel=ITEM.single_size||'', basePrice=ITEM.base_price;
-var selections=[], multiSel=[];
-var voiceMode=false, isSpeaking=false, isListening=false;
+var stepIdx=0,sizeLabel=ITEM.single_size||'',basePrice=ITEM.base_price,selections=[],multiSel=[];
+var voiceMode=false,isSpeaking=false,isListening=false;
+var synth=window.speechSynthesis,voice=null;
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 
-var feed=document.getElementById('F');
-var area=document.getElementById('A');
-var vbar=document.getElementById('vbar');
-var micBtn=document.getElementById('micBtn');
-var vstatus=document.getElementById('vstatus');
-var waves=document.getElementById('waves');
+var feed=document.getElementById('F'),area=document.getElementById('A');
+var MP=document.getElementById('MP'),MB=document.getElementById('MB');
+var MS=document.getElementById('MS'),MT=document.getElementById('MT'),MH=document.getElementById('MH');
 
-// ---- Mode selection (user gesture required) ----
-document.getElementById('btnVoice').onclick = function(){
-    voiceMode = true;
-    document.getElementById('startScreen').style.display='none';
-    document.getElementById('chatUI').style.display='block';
-    document.getElementById('modeLabel').textContent='Voice order — speak or tap';
-    vbar.style.display='flex';
-    initVoice();
+// ---- Boot buttons ----
+document.getElementById('bVoice').onclick=function(){
+    voiceMode=true;
+    document.getElementById('SS').style.display='none';
+    document.getElementById('UI').style.display='block';
+    document.getElementById('modeTag').textContent='Voice order';
+    MP.style.display='block';
+    // Request mic permission immediately on user gesture
+    navigator.mediaDevices.getUserMedia({audio:true})
+    .then(function(stream){
+        stream.getTracks().forEach(function(t){t.stop();});
+        MS.textContent='Mic ready ✓';
+        initVoices();
+        startOrder();
+    })
+    .catch(function(err){
+        MS.textContent='Mic blocked: '+err.message+'. Using tap mode.';
+        voiceMode=false;
+        startOrder();
+    });
+};
+document.getElementById('bTap').onclick=function(){
+    document.getElementById('SS').style.display='none';
+    document.getElementById('UI').style.display='block';
+    document.getElementById('modeTag').textContent='Tap to order';
     startOrder();
 };
-document.getElementById('btnTap').onclick = function(){
-    voiceMode = false;
-    document.getElementById('startScreen').style.display='none';
-    document.getElementById('chatUI').style.display='block';
-    document.getElementById('modeLabel').textContent='Tap to order';
-    startOrder();
-};
 
-// ---- Speech Synthesis ----
-var synth = window.speechSynthesis;
-var voice = null;
-function initVoice(){
-    var vs = synth.getVoices();
-    voice = vs.find(function(v){return v.lang.startsWith('en')&&/samantha|zira|karen|victoria|moira|tessa|fiona/i.test(v.name);})
-           || vs.find(function(v){return v.lang.startsWith('en');})
-           || vs[0];
+// ---- Voices ----
+function initVoices(){
+    var vs=synth.getVoices();
+    voice=vs.find(function(v){return v.lang.startsWith('en')&&/samantha|zira|karen|victoria|moira|tessa|fiona|google us english/i.test(v.name);})
+         ||vs.find(function(v){return v.lang.startsWith('en-US');})
+         ||vs.find(function(v){return v.lang.startsWith('en');})
+         ||vs[0];
+    console.log('Voice selected:',voice?voice.name:'none');
 }
-if(synth.onvoiceschanged!==undefined) synth.onvoiceschanged=initVoice;
+if(synth.onvoiceschanged!==undefined)synth.onvoiceschanged=initVoices;
 
-function speak(text, cb){
-    if(!voiceMode){if(cb)cb();return;}
+// ---- Speak ----
+function speak(text,cb){
+    if(!voiceMode){if(cb)setTimeout(cb,50);return;}
     synth.cancel();
     var u=new SpeechSynthesisUtterance(text);
-    u.voice=voice; u.rate=0.93; u.pitch=1.05; u.volume=1;
+    if(voice)u.voice=voice;
+    u.rate=0.92;u.pitch=1.05;u.volume=1;
     isSpeaking=true;
-    micBtn.className='mic speaking';
-    vstatus.innerHTML='<strong>Speaking&hellip;</strong>';
-    waves.className='waves show';
-    u.onend=u.onerror=function(){
+    MB.className='mic speaking';
+    MS.textContent='Speaking…';
+    u.onend=u.onerror=function(e){
         isSpeaking=false;
-        micBtn.className='mic idle';
-        waves.className='waves';
-        vstatus.textContent='Tap mic or speak your answer';
-        if(cb)cb();
+        MB.className='mic idle';
+        MS.textContent='Tap mic to answer';
+        if(cb)setTimeout(cb,200);
     };
+    // Chrome bug workaround: resume if paused
     synth.speak(u);
+    setTimeout(function(){if(synth.paused)synth.resume();},100);
 }
 
-// ---- Speech Recognition ----
-var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-var rec=SR?new SR():null;
-if(rec){rec.continuous=false;rec.interimResults=true;rec.lang='en-US';}
+// ---- Recognition ----
+var rec=null;
+if(SR){
+    rec=new SR();
+    rec.continuous=false;
+    rec.interimResults=true;
+    rec.lang='en-US';
+    rec.maxAlternatives=3;
+}
 
-micBtn.onclick=function(){
+MB.onclick=function(){
+    if(!rec){MS.textContent='Speech not supported in this browser. Please tap options.';return;}
     if(isSpeaking){synth.cancel();return;}
-    if(isListening){rec&&rec.stop();return;}
-    listen(null);
+    if(isListening){rec.stop();return;}
+    startListen(null);
 };
 
-function listen(cb){
-    if(!rec||isListening)return;
+function startListen(cb){
+    if(!rec||!voiceMode||isListening)return;
     isListening=true;
-    micBtn.className='mic listening';
-    vstatus.innerHTML='<strong>Listening&hellip;</strong>';
-    waves.className='waves show';
+    MB.className='mic listening';
+    MS.textContent='Listening… speak now';
+    MT.textContent='';
+
+    rec.onstart=function(){MS.textContent='Listening… speak now';};
+
     rec.onresult=function(e){
-        var t='';
-        for(var i=e.resultIndex;i<e.results.length;i++) t+=e.results[i][0].transcript;
-        vstatus.textContent='Heard: "'+t+'"';
-        if(e.results[e.results.length-1].isFinal){
+        var interim='',final_t='';
+        for(var i=e.resultIndex;i<e.results.length;i++){
+            if(e.results[i].isFinal) final_t+=e.results[i][0].transcript;
+            else interim+=e.results[i][0].transcript;
+        }
+        MT.textContent='Heard: "'+(final_t||interim)+'"';
+        if(final_t){
             rec.stop();
-            if(cb) cb(t.trim().toLowerCase());
-            else matchVoice(t.trim().toLowerCase());
+            var t=final_t.trim().toLowerCase();
+            console.log('Final transcript:',t);
+            if(cb) cb(t);
+            else matchStep(t);
         }
     };
-    rec.onerror=rec.onend=function(){
+
+    rec.onerror=function(e){
+        console.error('Rec error:',e.error);
         isListening=false;
-        micBtn.className='mic idle';
-        waves.className='waves';
-        vstatus.textContent='Tap mic to speak';
+        MB.className='mic idle';
+        MS.textContent='Error: '+e.error+'. Tap mic to retry.';
+        MT.textContent='';
+        if(e.error==='not-allowed') MS.textContent='Mic permission denied. Please tap options.';
     };
-    rec.start();
+
+    rec.onend=function(){
+        isListening=false;
+        MB.className='mic idle';
+        if(MS.textContent==='Listening… speak now') MS.textContent='Tap mic to answer';
+    };
+
+    try{rec.start();}
+    catch(e){console.error('rec.start error:',e);isListening=false;}
 }
 
-function matchVoice(t){
+function matchStep(t){
     if(stepIdx>=STEPS.length)return;
-    var step=STEPS[stepIdx], opts=step.options, multi=step.ui_type==='checkbox';
+    var step=STEPS[stepIdx],opts=step.options,multi=step.ui_type==='checkbox';
     if(multi){
         var matched=opts.filter(function(o){return t.indexOf(o.name.toLowerCase())!==-1;});
         if(matched.length){lockChips();handleChoice(matched);}
-        else speak('Sorry, please say option names or tap them. Say confirm when done.');
+        else{speak('Sorry, I didn\'t catch that. Please say the option names or tap them.',function(){setTimeout(function(){startListen(null);},300);});}
     } else {
         var best=null;
+        // Exact match
         opts.forEach(function(o){if(t.indexOf(o.name.toLowerCase())!==-1)best=o;});
-        if(!best) opts.forEach(function(o){if(t.indexOf(o.name.split(' ')[0].toLowerCase())!==-1)best=o;});
+        // First word match
+        if(!best)opts.forEach(function(o){var w=o.name.split(' ')[0].toLowerCase();if(t.indexOf(w)!==-1)best=o;});
+        // Number match for sizes
+        if(!best)opts.forEach(function(o){
+            var nums=o.name.match(/\d+/);
+            if(nums&&t.indexOf(nums[0])!==-1)best=o;
+        });
         if(best){lockChips();handleChoice([best]);}
-        else speak('Sorry I didn\'t catch that. Options are: '+opts.map(function(o){return o.name;}).join(', '));
+        else{speak('Sorry, options are: '+opts.map(function(o){return o.name;}).join(', ')+'. Please try again.',function(){setTimeout(function(){startListen(null);},300);});}
     }
 }
 
@@ -305,7 +332,7 @@ function lockChips(){area.querySelectorAll('.chip,.conf').forEach(function(b){b.
 function showChips(opts,cb,multi){
     area.innerHTML='';
     var wrap=document.createElement('div');wrap.className='ca2';
-    if(multi){var h=document.createElement('p');h.className='hint';h.textContent='Select all that apply, then tap Confirm';wrap.appendChild(h);}
+    if(multi){var h=document.createElement('p');h.className='hint';h.textContent='Select all that apply then tap Confirm, or say them aloud';wrap.appendChild(h);}
     var row=document.createElement('div');row.className='crow';
     var sel=new Set();
     opts.forEach(function(o){
@@ -313,7 +340,7 @@ function showChips(opts,cb,multi){
         var btn=document.createElement('button');btn.className='chip';btn.textContent=lbl;
         if(multi){
             btn.onclick=function(){if(btn.disabled)return;btn.classList.toggle('sel');if(sel.has(o.id))sel.delete(o.id);else sel.add(o.id);multiSel=opts.filter(function(x){return sel.has(x.id);});};
-        } else {
+        }else{
             btn.onclick=function(){if(btn.disabled)return;lockChips();cb([o]);};
         }
         row.appendChild(btn);
@@ -327,55 +354,60 @@ function showChips(opts,cb,multi){
     area.appendChild(wrap);
 }
 
-// ---- Step runner ----
+// ---- Step logic ----
 function handleChoice(chosen){
     var step=STEPS[stepIdx];
     if(step.key==='__size__'){
-        sizeLabel=chosen[0].name; basePrice=chosen[0].price_delta;
-        addMsg('user',chosen[0].name); stepIdx++; setTimeout(run,400); return;
+        sizeLabel=chosen[0].name;basePrice=chosen[0].price_delta;
+        addMsg('user',chosen[0].name);stepIdx++;setTimeout(run,400);return;
     }
     var d=chosen.length>0?chosen.map(function(o){return o.name;}).join(', '):'None';
     addMsg('user',d);
     chosen.filter(function(o){return o.name!=='None';}).forEach(function(o){
         selections.push({option_id:o.id,group_label:step.label.replace('?','').trim(),choice:o.name,price_delta:o.price_delta});
     });
-    stepIdx++; setTimeout(run,400);
+    stepIdx++;setTimeout(run,400);
 }
 
 function startOrder(){
     addMsg('bot','Hi! Let me help you order '+ITEM.name+'.');
-    speak('Hi! I\'m your Cedar Grove order assistant. Let me help you order '+ITEM.name+'.', function(){
+    speak('Hi! I am your Cedar Grove order assistant. Let me help you order '+ITEM.name+'.',function(){
         setTimeout(run,300);
     });
-    if(!voiceMode) setTimeout(run,400);
+    if(!voiceMode)setTimeout(run,300);
 }
 
 function run(){
     area.innerHTML='';
     if(stepIdx>=STEPS.length){showReceipt();return;}
-    var step=STEPS[stepIdx], multi=step.ui_type==='checkbox';
-    var prompt=step.label+' Options are: '+step.options.map(function(o){return o.name;}).join(', ')+(multi?'. Tap confirm when done.':'.');
-    addMsg('bot',step.label);
+    var step=STEPS[stepIdx],multi=step.ui_type==='checkbox';
+    var optList=step.options.map(function(o){return o.name;}).join(', ');
+    var prompt=step.label+' Your options are: '+optList+(multi?' — say confirm when done.':'.');
+    addMsg('bot',step.label+' Options: '+optList);
     showChips(step.options,handleChoice,multi);
-    speak(prompt,function(){
-        if(!multi) setTimeout(function(){listen(null);},300);
-    });
+    if(voiceMode){
+        MH.textContent='Say one of: '+optList;
+        speak(prompt,function(){
+            if(!multi)setTimeout(function(){startListen(null);},300);
+            else MS.textContent='Tap mic when ready to say your choices';
+        });
+    }
 }
 
-// ---- Receipt ----
 function showReceipt(){
     area.innerHTML='';
-    var mt=selections.reduce(function(s,x){return s+(x.price_delta||0);},0), tot=basePrice+mt;
-    var summary='Great! Here is your order. '+ITEM.name;
-    if(sizeLabel) summary+=', '+sizeLabel+' size';
-    if(selections.length) summary+=', with '+selections.map(function(s){return s.choice;}).join(', ');
-    summary+='. Total is $'+tot.toFixed(2)+'. Shall I add this to your basket? Say yes to confirm.';
-    addMsg('bot','Here is your order summary:');
+    var mt=selections.reduce(function(s,x){return s+(x.price_delta||0);},0),tot=basePrice+mt;
+    var summary='Great choice! Here is your order. '+ITEM.name;
+    if(sizeLabel)summary+=', '+sizeLabel+' size';
+    if(selections.length)summary+=', with '+selections.map(function(s){return s.choice;}).join(', ');
+    summary+='. Total is $'+tot.toFixed(2)+'. Say yes to add to your basket, or tap the button.';
+    addMsg('bot','Your order is ready:');
     speak(summary);
+    if(voiceMode)MH.textContent='Say \'yes\' to add to basket';
 
     var rc=document.createElement('div');rc.className='rc';
     var h='<p class="rt">'+esc(ITEM.name)+'</p>';
-    if(sizeLabel){h+='<div class="rr"><span>Size</span><span>'+esc(sizeLabel)+'</span></div>';h+='<div class="rr"><span>Base</span><span>$'+basePrice.toFixed(2)+'</span></div>';}
+    if(sizeLabel)h+='<div class="rr"><span>Size</span><span>'+esc(sizeLabel)+'</span></div><div class="rr"><span>Base</span><span>$'+basePrice.toFixed(2)+'</span></div>';
     else h+='<div class="rr"><span>Price</span><span>$'+basePrice.toFixed(2)+'</span></div>';
     selections.forEach(function(s){h+='<div class="rm">'+esc(s.group_label)+': '+esc(s.choice)+(s.price_delta>0?' <span style="color:#1D9E75">+$'+s.price_delta.toFixed(2)+'</span>':'')+'</div>';});
     h+='<div class="rr rT"><span>Total</span><span>$'+tot.toFixed(2)+'</span></div>';
@@ -383,19 +415,18 @@ function showReceipt(){
     btn.onclick=function(){addBasket(tot,btn);};
     rc.innerHTML=h;rc.appendChild(btn);area.appendChild(rc);
 
-    // Listen for yes/no
-    if(voiceMode) setTimeout(function(){
-        listen(function(t){
-            if(/yes|add|confirm|ok|sure/.test(t)) addBasket(tot,btn);
-            else if(/no|cancel/.test(t)) speak('No problem, tap back to return to the menu.');
+    if(voiceMode)setTimeout(function(){
+        startListen(function(t){
+            if(/yes|add|confirm|ok|sure|yeah|yep/.test(t))addBasket(tot,btn);
+            else if(/no|cancel|stop/.test(t))speak('No problem! Tap the back button to return to the menu.');
             else speak('Please say yes to add to your basket, or tap the button.');
         });
-    },4000);
+    },5000);
 }
 
 async function addBasket(tot,btn){
     btn.disabled=true;btn.textContent='Adding…';
-    speak('Adding to your basket!');
+    speak('Adding to your basket. Enjoy!');
     try{
         var r=await fetch(HOST+'/add_to_basket.php',{method:'POST',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({item_id:ITEM.id,item_name:ITEM.name,size_label:sizeLabel,base_price:basePrice,selections:selections,total:tot})});
@@ -405,11 +436,11 @@ async function addBasket(tot,btn){
             var bdg=document.querySelector('.bdg');
             if(!bdg){bdg=document.createElement('span');bdg.className='bdg';document.querySelector('.bkt').appendChild(bdg);}
             bdg.textContent=d.count;
-            var nav=document.createElement('div');nav.className='nav-row';
-            nav.innerHTML='<a href="'+HOST+'/index.php" class="nc nc-s">+ Add another item</a><a href="'+HOST+'/basket.php" class="nc nc-p">View basket &rarr;</a>';
+            var nav=document.createElement('div');nav.className='navr';
+            nav.innerHTML='<a href="'+HOST+'/index.php" class="nc ncs">+ Add another item</a><a href="'+HOST+'/basket.php" class="nc ncp">View basket &rarr;</a>';
             area.appendChild(nav);
-            speak('Done! Would you like to add anything else?');
-        } else {btn.textContent='Error — try again';btn.disabled=false;}
+            if(voiceMode)MH.textContent='Order added! Where to next?';
+        }else{btn.textContent='Error — try again';btn.disabled=false;}
     }catch(e){btn.textContent='Error — try again';btn.disabled=false;}
 }
 
