@@ -1,18 +1,59 @@
 <?php
 session_start();
-require_once __DIR__ . '/../src/supabase.php';
-require_once __DIR__ . '/../src/helpers.php';
 
+// ---- bootstrap ----
+$base = dirname(__DIR__);
+
+// Try multiple possible locations for env.php
+foreach ([
+    $base . '/config/env.php',
+    __DIR__  . '/config/env.php',
+    __DIR__  . '/../config/env.php',
+] as $envPath) {
+    if (file_exists($envPath)) { require_once $envPath; break; }
+}
+
+// Show a clear error if credentials still missing
+if (!defined('SUPABASE_URL') || !defined('SUPABASE_ANON_KEY')) {
+    die(renderError(
+        'Configuration missing',
+        'config/env.php not found or missing constants.<br>'
+        . 'Create it on the server with SUPABASE_URL and SUPABASE_ANON_KEY defined.<br>'
+        . 'Expected path: <code>' . $base . '/config/env.php</code>'
+    ));
+}
+
+require_once $base . '/src/supabase.php';
+require_once $base . '/src/helpers.php';
+
+// ---- fetch data ----
 $restaurants = fetch_menu();
 $basket      = $_SESSION['basket'] ?? [];
 $basket_count = array_sum(array_column($basket, 'qty'));
+
+if (empty($restaurants)) {
+    // Try to give a useful debug message
+    $test = sb_get('restaurants', []);
+    $debug = defined('SUPABASE_URL')
+        ? 'Supabase URL: ' . SUPABASE_URL . '<br>Got ' . count($test) . ' restaurants. Check RLS policies and anon key.'
+        : 'SUPABASE_URL not defined.';
+    die(renderError('No restaurant data returned', $debug));
+}
+
+function renderError(string $title, string $msg): string {
+    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>
+    <title>Error</title>
+    <style>body{font-family:sans-serif;padding:40px;background:#fff5f5}
+    h2{color:#c53030}code{background:#f0f0f0;padding:2px 6px;border-radius:4px}</style>
+    </head><body><h2>&#9888; $title</h2><p>$msg</p></body></html>";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cedar Grove &amp; Gianni's — Menu</title>
+  <title>Cedar Grove &amp; Gianni's &mdash; Menu</title>
   <link rel="stylesheet" href="assets/css/app.css" />
 </head>
 <body>
@@ -41,7 +82,6 @@ $basket_count = array_sum(array_column($basket, 'qty'));
 
 <main class="container">
 
-  <!-- restaurant tabs -->
   <div class="tab-bar">
     <?php foreach ($restaurants as $i => $r): ?>
       <button class="tab-btn <?= $i === 0 ? 'active' : '' ?>"
@@ -53,11 +93,8 @@ $basket_count = array_sum(array_column($basket, 'qty'));
 
   <?php foreach ($restaurants as $i => $r): ?>
   <div class="rest-panel <?= $i === 0 ? 'active' : '' ?>" id="rest-<?= $i ?>">
-
-    <!-- category side-nav + items grid -->
     <div class="menu-layout">
 
-      <!-- sticky category nav -->
       <nav class="cat-nav">
         <?php foreach ($r['categories'] as $j => $cat): ?>
           <a class="cat-link" href="#cat-<?= $i ?>-<?= $j ?>">
@@ -66,12 +103,10 @@ $basket_count = array_sum(array_column($basket, 'qty'));
         <?php endforeach; ?>
       </nav>
 
-      <!-- items -->
       <div class="items-area">
         <?php foreach ($r['categories'] as $j => $cat): ?>
           <section class="cat-section" id="cat-<?= $i ?>-<?= $j ?>">
             <h2 class="cat-title"><?= esc($cat['name']) ?></h2>
-
             <?php if (empty($cat['items'])): ?>
               <p class="empty">No items available.</p>
             <?php else: ?>
@@ -90,9 +125,7 @@ $basket_count = array_sum(array_column($basket, 'qty'));
                 </div>
                 <div class="item-card__footer">
                   <span class="item-card__price">
-                    <?= $item['min_price'] > 0
-                          ? 'from ' . fmt($item['min_price'])
-                          : 'See options' ?>
+                    <?= $item['min_price'] > 0 ? 'from ' . fmt($item['min_price']) : 'See options' ?>
                   </span>
                   <span class="item-card__cta">Order &rarr;</span>
                 </div>
@@ -103,6 +136,7 @@ $basket_count = array_sum(array_column($basket, 'qty'));
           </section>
         <?php endforeach; ?>
       </div>
+
     </div>
   </div>
   <?php endforeach; ?>
