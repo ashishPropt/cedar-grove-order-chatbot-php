@@ -15,18 +15,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify secrets are set
-        run: |
-          echo "FTP_HOST is set: ${{ secrets.FTP_HOST != '' }}"
-          echo "FTP_USER is set: ${{ secrets.FTP_USER != '' }}"
-          echo "FTP_PASS is set: ${{ secrets.FTP_PASS != '' }}"
-          echo "FTP_REMOTE_DIR is set: ${{ secrets.FTP_REMOTE_DIR != '' }}"
-          echo "FTP_REMOTE_DIR value: ${{ secrets.FTP_REMOTE_DIR }}"
-
       - name: Deploy via Python FTP
         env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_HOST: cedargrove.om-biz.com
+          FTP_USER: cedargrove@cedargrove.om-biz.com
           FTP_PASS: ${{ secrets.FTP_PASS }}
           FTP_DIR:  ${{ secrets.FTP_REMOTE_DIR }}
         run: |
@@ -40,12 +32,11 @@ jobs:
           ftp_dir = os.environ.get('FTP_DIR', '/').strip() or '/'
 
           print(f"Connecting to {host}...")
-          print(f"User: {user[:4]}*** ({len(user)} chars)")
-          print(f"Pass: {'set' if passwd else 'EMPTY'} ({len(passwd)} chars)")
+          print(f"User: {user}")
+          print(f"Pass length: {len(passwd)} chars")
           print(f"Remote dir: {ftp_dir}")
 
-          # Files/dirs to skip
-          SKIP = {'.git', '.github', 'database', 'config'}
+          SKIP       = {'.git', '.github', 'database'}
           SKIP_FILES = {'config/env.php'}
 
           try:
@@ -54,10 +45,13 @@ jobs:
               print("Connected:", ftp.getwelcome())
               ftp.login(user, passwd)
               print("Logged in OK")
+              ftp.set_pasv(True)
 
               def ensure_dir(ftp, path):
-                  try: ftp.mkd(path)
-                  except: pass
+                  try:
+                      ftp.mkd(path)
+                  except:
+                      pass
 
               def upload_file(ftp, local_path, remote_path):
                   with open(local_path, 'rb') as f:
@@ -67,21 +61,20 @@ jobs:
               def upload_dir(ftp, local_dir, remote_dir):
                   ensure_dir(ftp, remote_dir)
                   for item in sorted(Path(local_dir).iterdir()):
-                      rel = item.relative_to('.')
-                      # skip hidden + excluded dirs
+                      rel = str(item.relative_to('.'))
                       if item.name.startswith('.') or item.name in SKIP:
                           print(f"  skipping: {rel}")
                           continue
-                      if str(rel) in SKIP_FILES:
+                      if rel in SKIP_FILES:
                           print(f"  skipping file: {rel}")
                           continue
-                      remote_path = f"{remote_dir}/{item.name}"
+                      remote_path = f"{remote_dir.rstrip('/')}/{item.name}"
                       if item.is_dir():
-                          upload_dir(ftp, item, remote_path)
+                          upload_dir(ftp, str(item), remote_path)
                       else:
-                          upload_file(ftp, item, remote_path)
+                          upload_file(ftp, str(item), remote_path)
 
-              upload_dir(ftp, '.', ftp_dir.rstrip('/'))
+              upload_dir(ftp, '.', ftp_dir.rstrip('/') or '/')
               ftp.quit()
               print("\nDeploy complete!")
 
