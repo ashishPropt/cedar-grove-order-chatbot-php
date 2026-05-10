@@ -1,0 +1,15 @@
+# Enable PHP processing
+AddHandler application/x-httpd-php .php
+AddType application/x-httpd-php .php
+
+# Set index files
+DirectoryIndex index.php index.html
+
+# Hide sensitive files
+<FilesMatch "^(config|env)\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Pretty URLs (optional)
+Options -Indexes
