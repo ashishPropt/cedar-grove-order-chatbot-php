@@ -17,10 +17,39 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify secrets are set
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          FTP_DIR:  ${{ secrets.FTP_REMOTE_DIR }}
+        run: |
+          echo "FTP_HOST is set: $( [ -n "$FTP_HOST" ] && echo YES || echo NO )"
+          echo "FTP_USER is set: $( [ -n "$FTP_USER" ] && echo YES || echo NO )"
+          echo "FTP_PASS is set: $( [ -n "$FTP_PASS" ] && echo YES || echo NO )"
+          echo "FTP_DIR  is set: $( [ -n "$FTP_DIR"  ] && echo YES || echo NO )"
+          echo "FTP_HOST length: ${#FTP_HOST}"
+          echo "FTP_USER length: ${#FTP_USER}"
+          echo "FTP_PASS length: ${#FTP_PASS}"
+          echo "FTP_DIR  value : $FTP_DIR"
+
       - name: Install lftp
         run: sudo apt-get install -y lftp
 
-      - name: Deploy via lftp
+      - name: Test FTP connection
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+        run: |
+          lftp -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST <<'EOF'
+          set ftp:ssl-allow no
+          set net:timeout 15
+          ls
+          bye
+          EOF
+
+      - name: Deploy via lftp mirror
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
@@ -29,15 +58,16 @@ jobs:
         run: |
           lftp -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST <<EOF
           set ftp:ssl-allow no
-          set net:timeout 10
+          set net:timeout 30
           set net:max-retries 3
+          set mirror:use-pget-n 5
           mirror --reverse \
                  --delete \
                  --verbose \
-                 --exclude-glob .git \
-                 --exclude-glob .github \
-                 --exclude-glob database \
-                 --exclude-glob "config/env.php" \
+                 --exclude-glob .git/ \
+                 --exclude-glob .github/ \
+                 --exclude-glob database/ \
+                 --exclude-glob config/env.php \
                  . $FTP_DIR
           bye
           EOF
