@@ -38,19 +38,14 @@ jobs:
           ftp.set_pasv(True)
 
           print('Initial PWD:', ftp.pwd())
-
-          # List root
           items = []
           ftp.retrlines('NLST', items.append)
           print('Root items:', items)
 
-          # Navigate into public_html first (we know from debug.php the path is
-          # /home/mathuras/public_html/cedargrove.om-biz.com)
           if 'public_html' in items:
               ftp.cwd('public_html')
-              print('Changed to public_html, PWD:', ftp.pwd())
-          
-          # Now list to find cedargrove.om-biz.com
+              print('Changed to public_html')
+
           items2 = []
           ftp.retrlines('NLST', items2.append)
           print('public_html items:', items2)
@@ -58,11 +53,15 @@ jobs:
           if 'cedargrove.om-biz.com' in items2:
               ftp.cwd('cedargrove.om-biz.com')
               print('Changed to cedargrove.om-biz.com, PWD:', ftp.pwd())
-          
-          print('Final PWD (web root):', ftp.pwd())
+
+          # DELETE index.html if it exists (it blocks index.php)
+          try:
+              ftp.delete('index.html')
+              print('Deleted index.html')
+          except:
+              print('index.html not found, skipping delete')
 
           def ensure_dir(ftp, path):
-              """Create directory relative to current directory."""
               parts = [p for p in path.replace('\\', '/').split('/') if p]
               for i, part in enumerate(parts):
                   sub = '/'.join(parts[:i+1])
@@ -73,7 +72,6 @@ jobs:
                       pass
 
           def upload_file(ftp, local, remote):
-              """Upload file, ensuring parent dir exists. remote is relative to cwd."""
               parts = remote.replace('\\', '/').split('/')
               if len(parts) > 1:
                   ensure_dir(ftp, '/'.join(parts[:-1]))
@@ -82,7 +80,6 @@ jobs:
               print('  uploaded:', remote)
 
           def upload_dir(ftp, local_dir, remote_dir):
-              """Upload directory recursively. remote_dir is relative to cwd."""
               ensure_dir(ftp, remote_dir)
               for item in sorted(Path(local_dir).iterdir()):
                   if item.name.startswith('.'): continue
@@ -95,21 +92,21 @@ jobs:
                   else:
                       upload_file(ftp, str(item), rpath)
 
-          # Now upload relative to web root (cedargrove.om-biz.com/)
-          # public/* goes directly into web root
-          print('\n--- Uploading public/ contents to web root ---')
+          # Upload public/* to web root (skip index.html)
+          print('\n--- Uploading public/ contents ---')
           for item in sorted(Path('public').iterdir()):
               if item.name.startswith('.'): continue
+              if item.name == 'index.html': continue  # never deploy index.html
               if item.is_dir():
                   upload_dir(ftp, str(item), item.name)
               else:
                   upload_file(ftp, str(item), item.name)
 
-          # src/ goes into web root/src/
+          # Upload src/
           print('\n--- Uploading src/ ---')
           upload_dir(ftp, 'src', 'src')
 
-          # config/ goes into web root/config/ (skip env.php)
+          # Upload config/ (skip env.php)
           print('\n--- Uploading config/ ---')
           ensure_dir(ftp, 'config')
           for item in sorted(Path('config').iterdir()):
