@@ -29,8 +29,9 @@ jobs:
           user   = os.environ['FTP_USER']
           passwd = os.environ['FTP_PASS']
 
-          SKIP       = {'.git', '.github', 'database'}
-          SKIP_FILES = {'config/env.php'}
+          # Files and dirs to never upload
+          SKIP_DIRS  = {'.git', '.github', 'database'}
+          SKIP_FILES = {'config/env.php', '.gitignore', 'README.md'}
 
           try:
               ftp = ftplib.FTP()
@@ -39,29 +40,29 @@ jobs:
               ftp.set_pasv(True)
               print("Logged in OK")
 
-              # List root to find the correct web root
-              print("\n=== Root directory listing ===")
-              ftp.retrlines('LIST')
-
-              # Try common web root names
+              # Detect web root
               web_root = '/'
-              for candidate in ['public_html', 'www', 'htdocs', 'web', 'public']:
+              for candidate in ['public_html', 'www', 'htdocs', 'web']:
                   try:
                       ftp.cwd(candidate)
                       web_root = candidate
-                      print(f"\nFound web root: {candidate}")
-                      print(f"=== {candidate}/ listing ===")
-                      ftp.retrlines('LIST')
                       ftp.cwd('/')
+                      print(f"Web root detected: {web_root}")
                       break
                   except:
                       pass
 
-              print(f"\n=== Deploying to: {web_root} ===")
-
               def ensure_dir(ftp, path):
-                  try: ftp.mkd(path)
-                  except: pass
+                  """Recursively create remote directories."""
+                  parts = [p for p in path.replace('\\', '/').split('/') if p]
+                  current = ''
+                  for part in parts:
+                      current = current + '/' + part
+                      try:
+                          ftp.mkd(current)
+                          print(f"  created dir: {current}")
+                      except:
+                          pass  # already exists
 
               def upload_file(ftp, local_path, remote_path):
                   with open(local_path, 'rb') as f:
@@ -71,19 +72,31 @@ jobs:
               def upload_dir(ftp, local_dir, remote_dir):
                   ensure_dir(ftp, remote_dir)
                   for item in sorted(Path(local_dir).iterdir()):
-                      rel = str(item.relative_to('.'))
-                      if item.name.startswith('.') or item.name in SKIP:
-                          print(f"  skipping: {rel}")
+                      # Build relative path from repo root for skip checks
+                      try:
+                          rel = str(item.relative_to(Path('.')))
+                      except:
+                          rel = item.name
+
+                      # Skip hidden files/dirs and excluded dirs
+                      if item.name.startswith('.'):
+                          print(f"  skipping hidden: {rel}")
                           continue
-                      if rel in SKIP_FILES:
+                      if item.is_dir() and item.name in SKIP_DIRS:
+                          print(f"  skipping dir: {rel}")
+                          continue
+                      if item.is_file() and rel in SKIP_FILES:
                           print(f"  skipping file: {rel}")
                           continue
+
                       remote_path = f"{remote_dir.rstrip('/')}/{item.name}"
+
                       if item.is_dir():
                           upload_dir(ftp, str(item), remote_path)
                       else:
                           upload_file(ftp, str(item), remote_path)
 
+              print(f"\nStarting full deploy to {web_root}...")
               upload_dir(ftp, '.', web_root)
               ftp.quit()
               print("\nDeploy complete!")
