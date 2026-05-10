@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:   # allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
   ftp-deploy:
@@ -15,20 +15,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # full history so diff works on subsequent deploys
+          fetch-depth: 0
+
+      - name: List files being deployed
+        run: |
+          echo "=== Files to deploy ==="
+          find . -not -path './.git/*' -not -path './.github/*' -not -name '.gitignore' -type f | sort
+
+      - name: Test FTP connection
+        run: |
+          sudo apt-get install -y lftp
+          lftp -u "${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }}" \
+               -e "set ftp:ssl-allow no; ls; bye" \
+               ftp://${{ secrets.FTP_HOST }} || echo "FTP connection test failed"
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server:       ${{ secrets.FTP_HOST }}
-          username:     ${{ secrets.FTP_USER }}
-          password:     ${{ secrets.FTP_PASS }}
-          port:         21
-          protocol:     ftp
-          server-dir:   ${{ secrets.FTP_REMOTE_DIR }}
-          local-dir:    ./
+          server:      ${{ secrets.FTP_HOST }}
+          username:    ${{ secrets.FTP_USER }}
+          password:    ${{ secrets.FTP_PASS }}
+          port:        21
+          protocol:    ftp
+          server-dir:  ${{ secrets.FTP_REMOTE_DIR }}
+          local-dir:   ./
           dangerous-clean-slate: false
           git-ftp-args: --insecure
+          log-level:   verbose
           exclude: |
             **/.git*
             **/.git*/**
