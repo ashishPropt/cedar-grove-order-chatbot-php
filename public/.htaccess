@@ -1,15 +1,30 @@
-# Enable PHP processing
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Enable PHP
 AddHandler application/x-httpd-php .php
 AddType application/x-httpd-php .php
 
-# Set index files
+# Default index
 DirectoryIndex index.php index.html
 
-# Hide sensitive files
-<FilesMatch "^(config|env)\.php$">
+# Block direct access to sensitive files
+<FilesMatch "^(env|config)\.php$">
     Order allow,deny
     Deny from all
 </FilesMatch>
 
-# Pretty URLs (optional)
+# Service worker scope
+<IfModule mod_headers.c>
+    <FilesMatch "sw\.js$">
+        Header set Service-Worker-Allowed "/"
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+    # Allow SharedArrayBuffer for PWA
+    Header set Cross-Origin-Opener-Policy "same-origin"
+    Header set Cross-Origin-Embedder-Policy "require-corp"
+</IfModule>
+
 Options -Indexes
